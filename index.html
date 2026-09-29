@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Estudos - Banco de Questões</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .correct-bg {
+            background-color: #d1fae5 !important;
+            border-color: #10b981 !important;
+            color: #065f46 !important;
+        }
+        .incorrect-bg {
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #991b1b !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header Navbar -->
+    <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-graduation-cap text-3xl"></i>
+                <div>
+                    <h1 class="text-xl font-bold leading-tight">EstudoQuest</h1>
+                    <p class="text-xs text-indigo-200">Seu Banco de Questões Interativo</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <nav class="flex bg-indigo-700/60 p-1 rounded-xl gap-1">
+                <button id="tab-practice" onclick="switchTab('practice')" class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-white text-indigo-600 shadow-sm">
+                    <i class="fa-solid fa-pen-to-square mr-2"></i>Praticar
+                </button>
+                <button id="tab-manage" onclick="switchTab('manage')" class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-indigo-100 hover:text-white">
+                    <i class="fa-solid fa-list-check mr-2"></i>Gerenciar Banco
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6">
+
+        <!-- VIEW 1: PRATICAR QUESTÕES -->
+        <section id="view-practice" class="space-y-6">
+            <!-- Filter Bar -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <i class="fa-solid fa-filter text-slate-400"></i>
+                    <label for="filter-subject-practice" class="text-sm font-medium text-slate-600 shrink-0">Filtrar por Matéria:</label>
+                    <select id="filter-subject-practice" onchange="renderPracticeQuestions()" class="bg-slate-50 border border-slate-300 rounded-lg text-sm px-3 py-2 w-full sm:w-auto focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="ALL">Todas as Matérias</option>
+                    </select>
+                </div>
+                <div class="text-xs text-slate-500 font-medium bg-slate-100 px-3 py-1.5 rounded-full" id="stats-counter">
+                    0 Questões disponíveis
+                </div>
+            </div>
+
+            <!-- Question Cards Container -->
+            <div id="practice-questions-container" class="space-y-6">
+                <!-- Dynamically generated question cards will go here -->
+            </div>
+        </section>
+
+        <!-- VIEW 2: GERENCIAR E CADASTRAR QUESTÕES -->
+        <section id="view-manage" class="hidden space-y-8">
+            <!-- Form Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center gap-2 mb-6 pb-3 border-b border-slate-100">
+                    <i class="fa-solid fa-circle-plus text-indigo-600 text-xl"></i>
+                    <h2 class="text-lg font-bold text-slate-800">Cadastrar Nova Questão</h2>
+                </div>
+
+                <form id="add-question-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Matéria / Disciplina *</label>
+                            <input type="text" id="form-subject" required placeholder="Ex: Matemática, História, Programação" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Assunto / Tópico</label>
+                            <input type="text" id="form-topic" placeholder="Ex: Equações de 2º Grau, Segunda Guerra" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Enunciado da Questão *</label>
+                        <textarea id="form-statement" required rows="3" placeholder="Digite aqui o texto da pergunta..." class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <!-- Options Inputs -->
+                    <div class="space-y-3 pt-2">
+                        <label class="block text-xs font-semibold text-slate-600 uppercase">Alternativas de Resposta *</label>
+                        
+                        <div class="grid grid-cols-1 gap-2">
+                            <!-- Option 0 -->
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-slate-400 text-sm w-6 text-center">A</span>
+                                <input type="text" id="form-option-0" required placeholder="Alternativa A" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <label class="flex items-center gap-1 cursor-pointer bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-700">
+                                    <input type="radio" name="correct-option" value="0" checked class="accent-indigo-600"> Correta
+                                </label>
+                            </div>
+
+                            <!-- Option 1 -->
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-slate-400 text-sm w-6 text-center">B</span>
+                                <input type="text" id="form-option-1" required placeholder="Alternativa B" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <label class="flex items-center gap-1 cursor-pointer bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-700">
+                                    <input type="radio" name="correct-option" value="1" class="accent-indigo-600"> Correta
+                                </label>
+                            </div>
+
+                            <!-- Option 2 -->
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-slate-400 text-sm w-6 text-center">C</span>
+                                <input type="text" id="form-option-2" required placeholder="Alternativa C" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <label class="flex items-center gap-1 cursor-pointer bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-700">
+                                    <input type="radio" name="correct-option" value="2" class="accent-indigo-600"> Correta
+                                </label>
+                            </div>
+
+                            <!-- Option 3 -->
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-slate-400 text-sm w-6 text-center">D</span>
+                                <input type="text" id="form-option-3" required placeholder="Alternativa D" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <label class="flex items-center gap-1 cursor-pointer bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-700">
+                                    <input type="radio" name="correct-option" value="3" class="accent-indigo-600"> Correta
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Explicação da Resposta (Feedback)</label>
+                        <textarea id="form-explanation" rows="2" placeholder="Explique o porquê da resposta correta para ajudar nos estudos..." class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <div class="pt-2 flex justify-end">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition-all shadow-md flex items-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Salvar Questão
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Existing Questions List / Management Table -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 pb-3 border-b border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-database text-indigo-600"></i> Questões Cadastradas
+                    </h2>
+                    <button onclick="resetToDefaultQuestions()" class="text-xs text-rose-600 hover:text-rose-800 font-medium flex items-center gap-1">
+                        <i class="fa-solid fa-rotate-left"></i> Restaurar Exemplo Inicial
+                    </button>
+                </div>
+
+                <div id="manage-questions-list" class="divide-y divide-slate-100">
+                    <!-- Manage Items rendered here -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 transition-opacity duration-300 opacity-0 pointer-events-none z-50">
+        <i id="toast-icon" class="fa-solid fa-circle-info"></i>
+        <span id="toast-message" class="text-sm">Mensagem do sistema</span>
+    </div>
+
+    <script>
+        // Sample Initial Questions
+        const INITIAL_QUESTIONS = [
+            {
+                id: 'q-1',
+                subject: 'Matemática',
+                topic: 'Aritmética Básica',
+                statement: 'Qual é o resultado do cálculo (8 × 3) - (12 ÷ 4)?',
+                options: ['18', '21', '24', '15'],
+                correct: 1,
+                explanation: 'Primeiro resolvem-se as multiplicações e divisões: (8 × 3 = 24) e (12 ÷ 4 = 3). Em seguida subtrai-se: 24 - 3 = 21.'
+            },
+            {
+                id: 'q-2',
+                subject: 'Programação',
+                topic: 'JavaScript',
+                statement: 'Qual das opções a seguir é usada para declarar uma variável com escopo de bloco e que não pode ser reatribuída?',
+                options: ['var', 'let', 'const', 'global'],
+                correct: 2,
+                explanation: 'Em JavaScript, `const` cria uma referência constante a um valor de escopo de bloco que não pode ser reatribuído.'
+            },
+            {
+                id: 'q-3',
+                subject: 'História',
+                topic: 'História do Brasil',
+                statement: 'Em que ano ocorreu a Proclamação da República do Brasil?',
+                options: ['1822', '1888', '1889', '1930'],
+                correct: 2,
+                explanation: 'A Proclamação da República no Brasil ocorreu em 15 de novembro de 1889, liderada pelo Marechal Deodoro da Fonseca.'
+            }
+        ];
+
+        // Global State
+        let questions = [];
+
+        window.onload = function() {
+            loadQuestions();
+            renderPracticeQuestions();
+            renderManageQuestions();
+            updateSubjectFilters();
+        };
+
+        function loadQuestions() {
+            const stored = localStorage.getItem('estudoquest_questions');
+            if (stored) {
+                try {
+                    questions = JSON.parse(stored);
+                } catch(e) {
+                    questions = [...INITIAL_QUESTIONS];
+                }
+            } else {
+                questions = [...INITIAL_QUESTIONS];
+                saveQuestions();
+            }
+        }
+
+        function saveQuestions() {
+            localStorage.setItem('estudoquest_questions', JSON.stringify(questions));
+        }
+
+        function resetToDefaultQuestions() {
+            if (confirm('Deseja realmente restaurar as questões iniciais de exemplo? Suas questões customizadas serão mantidas no final.')) {
+                questions = [...INITIAL_QUESTIONS];
+                saveQuestions();
+                renderPracticeQuestions();
+                renderManageQuestions();
+                updateSubjectFilters();
+                showToast('Questões resetadas com sucesso!', 'success');
+            }
+        }
+
+        function switchTab(tab) {
+            const practiceView = document.getElementById('view-practice');
+            const manageView = document.getElementById('view-manage');
+            const tabPracticeBtn = document.getElementById('tab-practice');
+            const tabManageBtn = document.getElementById('tab-manage');
+
+            if (tab === 'practice') {
+                practiceView.classList.remove('hidden');
+                manageView.classList.add('hidden');
+                
+                tabPracticeBtn.className = "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-white text-indigo-600 shadow-sm";
+                tabManageBtn.className = "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-indigo-100 hover:text-white";
+                
+                renderPracticeQuestions();
+            } else {
+                practiceView.classList.add('hidden');
+                manageView.classList.remove('hidden');
+
+                tabManageBtn.className = "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-white text-indigo-600 shadow-sm";
+                tabPracticeBtn.className = "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-indigo-100 hover:text-white";
+
+                renderManageQuestions();
+            }
+        }
+
+        function updateSubjectFilters() {
+            const filterSelect = document.getElementById('filter-subject-practice');
+            const subjects = [...new Set(questions.map(q => q.subject))];
+            
+            const currentValue = filterSelect.value;
+            filterSelect.innerHTML = '<option value="ALL">Todas as Matérias</option>';
+            
+            subjects.forEach(subj => {
+                const opt = document.createElement('option');
+                opt.value = subj;
+                opt.textContent = subj;
+                filterSelect.appendChild(opt);
+            });
+
+            filterSelect.value = currentValue || 'ALL';
+        }
+
+        function renderPracticeQuestions() {
+            const container = document.getElementById('practice-questions-container');
+            const selectedSubject = document.getElementById('filter-subject-practice').value;
+            const counter = document.getElementById('stats-counter');
+
+            let filtered = questions;
+            if (selectedSubject && selectedSubject !== 'ALL') {
+                filtered = questions.filter(q => q.subject === selectedSubject);
+            }
+
+            counter.textContent = `${filtered.length} Questão(ões) encontrada(s)`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 bg-white rounded-2xl border border-slate-200">
+                        <i class="fa-solid fa-folder-open text-4xl text-slate-300 mb-3"></i>
+                        <p class="text-slate-500 font-medium">Nenhuma questão encontrada nesta matéria.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map((q, qIdx) => `
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4" id="card-${q.id}">
+                    <!-- Question Header Tag -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-md border border-indigo-100">
+                                ${escapeHtml(q.subject)}
+                            </span>
+                            ${q.topic ? `<span class="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-1 rounded-md">${escapeHtml(q.topic)}</span>` : ''}
+                        </div>
+                        <span class="text-xs text-slate-400 font-medium">Questão #${qIdx + 1}</span>
+                    </div>
+
+                    <!-- Statement -->
+                    <p class="text-slate-800 font-medium leading-relaxed">${escapeHtml(q.statement)}</p>
+
+                    <!-- Options -->
+                    <div class="space-y-2 pt-2" id="options-group-${q.id}">
+                        ${q.options.map((opt, idx) => `
+                            <label id="opt-container-${q.id}-${idx}" class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 cursor-pointer transition-all">
+                                <input type="radio" name="q-option-${q.id}" value="${idx}" class="accent-indigo-600 w-4 h-4">
+                                <span class="text-xs font-bold text-slate-400 uppercase border border-slate-200 rounded px-1.5 py-0.5 bg-white">
+                                    ${String.fromCharCode(65 + idx)}
+                                </span>
+                                <span class="text-sm text-slate-700 flex-1">${escapeHtml(opt)}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+
+                    <!-- Action & Feedback -->
+                    <div class="pt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <button onclick="checkAnswer('${q.id}')" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check"></i> Responder
+                        </button>
+                    </div>
+
+                    <!-- Explanation Container (Hidden by default) -->
+                    <div id="explanation-${q.id}" class="hidden mt-4 p-4 rounded-xl text-sm leading-relaxed border">
+                        <div class="font-bold mb-1 flex items-center gap-2" id="explanation-title-${q.id}">
+                            <!-- Icon and Status -->
+                        </div>
+                        <p id="explanation-text-${q.id}" class="text-slate-700"></p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function checkAnswer(questionId) {
+            const question = questions.find(q => q.id === questionId);
+            if (!question) return;
+
+            const selectedInput = document.querySelector(`input[name="q-option-${questionId}"]:checked`);
+            if (!selectedInput) {
+                showToast('Selecione uma opção antes de responder.', 'warning');
+                return;
+            }
+
+            const selectedIndex = parseInt(selectedInput.value);
+            const isCorrect = selectedIndex === question.correct;
+
+            // Reset container styles for this question
+            question.options.forEach((_, idx) => {
+                const optContainer = document.getElementById(`opt-container-${questionId}-${idx}`);
+                optContainer.className = "flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 cursor-pointer transition-all";
+            });
+
+            // Target Option highlight
+            const targetContainer = document.getElementById(`opt-container-${questionId}-${selectedIndex}`);
+            const correctContainer = document.getElementById(`opt-container-${questionId}-${question.correct}`);
+
+            if (isCorrect) {
+                targetContainer.classList.add('correct-bg');
+            } else {
+                targetContainer.classList.add('incorrect-bg');
+                // Highlight the correct one as well
+                correctContainer.classList.add('correct-bg');
+            }
+
+            // Show explanation
+            const expContainer = document.getElementById(`explanation-${questionId}`);
+            const expTitle = document.getElementById(`explanation-title-${questionId}`);
+            const expText = document.getElementById(`explanation-text-${questionId}`);
+
+            expContainer.classList.remove('hidden');
+
+            if (isCorrect) {
+                expContainer.className = "mt-4 p-4 rounded-xl text-sm bg-emerald-50 border-emerald-200 border text-emerald-900";
+                expTitle.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i> Resposta Correta!';
+            } else {
+                expContainer.className = "mt-4 p-4 rounded-xl text-sm bg-rose-50 border-rose-200 border text-rose-900";
+                expTitle.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-600"></i> Resposta Incorreta';
+            }
+
+            expText.textContent = question.explanation || 'Sem explicação disponível para esta questão.';
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const subject = document.getElementById('form-subject').value.trim();
+            const topic = document.getElementById('form-topic').value.trim();
+            const statement = document.getElementById('form-statement').value.trim();
+            
+            const opt0 = document.getElementById('form-option-0').value.trim();
+            const opt1 = document.getElementById('form-option-1').value.trim();
+            const opt2 = document.getElementById('form-option-2').value.trim();
+            const opt3 = document.getElementById('form-option-3').value.trim();
+
+            const correctOption = parseInt(document.querySelector('input[name="correct-option"]:checked').value);
+            const explanation = document.getElementById('form-explanation').value.trim();
+
+            const newQuestion = {
+                id: 'q-' + Date.now(),
+                subject,
+                topic,
+                statement,
+                options: [opt0, opt1, opt2, opt3],
+                correct: correctOption,
+                explanation
+            };
+
+            questions.unshift(newQuestion);
+            saveQuestions();
+            updateSubjectFilters();
+
+            // Reset Form
+            document.getElementById('add-question-form').reset();
+            showToast('Nova questão salva com sucesso!', 'success');
+
+            // Refresh list in management
+            renderManageQuestions();
+        }
+
+        function renderManageQuestions() {
+            const listContainer = document.getElementById('manage-questions-list');
+            
+            if (questions.length === 0) {
+                listContainer.innerHTML = '<p class="text-slate-400 text-sm py-4 text-center">Nenhuma questão cadastrada.</p>';
+                return;
+            }
+
+            listContainer.innerHTML = questions.map((q, idx) => `
+                <div class="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="space-y-1 flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded">${escapeHtml(q.subject)}</span>
+                            ${q.topic ? `<span class="text-xs text-slate-400">${escapeHtml(q.topic)}</span>` : ''}
+                        </div>
+                        <p class="text-sm font-medium text-slate-800 line-clamp-2">${escapeHtml(q.statement)}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="deleteQuestion('${q.id}')" class="text-rose-500 hover:text-rose-700 p-2 rounded-lg hover:bg-rose-50 text-xs font-medium flex items-center gap-1 transition-all">
+                            <i class="fa-solid fa-trash-can"></i> Excluir
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteQuestion(id) {
+            if (confirm('Tem certeza que deseja remover esta questão?')) {
+                questions = questions.filter(q => q.id !== id);
+                saveQuestions();
+                renderManageQuestions();
+                renderPracticeQuestions();
+                updateSubjectFilters();
+                showToast('Questão excluída.', 'info');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMessage.textContent = message;
+
+            if (type === 'success') {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
+            } else if (type === 'warning') {
+                toastIcon.className = "fa-solid fa-triangle-exclamation text-amber-400";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-info text-sky-400";
+            }
+
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // Helper to prevent XSS
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
